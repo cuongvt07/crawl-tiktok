@@ -1,0 +1,6 @@
+typer
+requests
+beautifulsoup4
+playwright
+yt-dlp
+rich

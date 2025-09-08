@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "TiktokCrawler"
+version = "0.1.7"
+authors = [
+  { name="akariwill", email="wildanjrbusiness@gmail.com" },
+]
+description = "A simple TikTok video downloader."
+readme = "README.md"
+requires-python = ">=3.6"
+license = { text = "MIT" }
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "typer",
+    "requests",
+    "beautifulsoup4",
+    "playwright",
+    "yt-dlp",
+    "rich",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/akariwill/TiktokCrawler"
+
+[project.scripts]
+tiktok-crawler = "TiktokCrawler.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
