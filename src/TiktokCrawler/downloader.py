@@ -155,9 +155,6 @@ def _get_ydl_opts(proxy: str = None, download: bool = True, output_dir: str = DO
             {
                 'key': 'FFmpegMetadata',
                 'add_metadata': True,
-            },
-            {
-                'key': 'FFmpegFixupStretchedVideo',
             }
         ],
     }
