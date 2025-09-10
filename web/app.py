@@ -499,6 +499,45 @@ def index():
     
     return html_content
 
+# API routes
+@app.route('/api/download-to-local', methods=['POST'])
+def download_to_local():
+    """API để tải video từ server về máy local"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        local_path = data.get('localPath', '').strip()
+
+        if not filename:
+            return jsonify({
+                'success': False,
+                'message': 'Tên file không được để trống'
+            })
+
+        file_path = os.path.join(DOWNLOADS_DIR, filename)
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': f'File {filename} không tồn tại trên server'
+            })
+
+        # Trả về đường dẫn download trực tiếp
+        download_url = request.host_url.rstrip('/') + f'/downloads/{filename}'
+        
+        return jsonify({
+            'success': True,
+            'message': 'File sẵn sàng để tải xuống',
+            'download_url': download_url,
+            'filename': filename,
+            'local_path': local_path
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Lỗi: {str(e)}'
+        })
+
 @app.route('/api/download', methods=['POST'])
 def api_download():
     try:
