@@ -7,50 +7,39 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Tạo người dùng không phải root để tăng bảo mật
+# Tạo user không phải root
 RUN groupadd -r tiktokcrawler && useradd -r -g tiktokcrawler tiktokcrawler
 
-# Thư mục làm việc trong container
+# Thư mục làm việc
 WORKDIR /app
 
-# Sao chép requirements trước để tận dụng cache
+# Copy requirements và cài đặt
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir flask gunicorn
 
-# Sao chép code
+# Copy code
 COPY setup_web.py .
 COPY src/ ./src/
 COPY pyproject.toml .
 COPY web/ ./web/
 
-# Cài đặt package
+# Cài đặt package (editable mode)
 RUN pip install -e .
 
-# Tạo thư mục downloads và thiết lập quyền
-RUN mkdir -p /app/downloads && \
-    mkdir -p /app/user_downloads && \
-    chown -R tiktokcrawler:tiktokcrawler /app
+# Tạo thư mục dữ liệu và gán quyền
+RUN mkdir -p /app/downloads /app/user_downloads \
+    && chown -R tiktokcrawler:tiktokcrawler /app
 
-# Chuyển sang user không phải root
+# Chuyển sang user non-root
 USER tiktokcrawler
 
-# Expose port cho web interface
+# Expose port 5000 (chạy cố định 5000 thôi, không cần 8080 nữa)
 EXPOSE 5000
 
-# Health check
+# Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5000/ || exit 1
 
-# Khởi chạy web interface với Gunicorn
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "web.app:app"]
-RUN pip install -e .
-
-# Chuyển sang người dùng không phải root
-USER tiktokcrawler
-
-# Port để chạy Flask
-EXPOSE 8080
-
-# Chạy ứng dụng web với gunicorn cho môi trường production
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "4", "--timeout", "120", "web.app:app"]
+# Chạy web bằng Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "--timeout", "120", "web.app:app"]
