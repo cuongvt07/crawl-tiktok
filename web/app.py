@@ -79,7 +79,7 @@ def api_download():
                 })
 
         # Sử dụng thư mục tùy chỉnh nếu được cung cấp
-        output_dir = custom_dir if custom_dir else DOWNLOADS_DIR
+        output_dir = DOWNLOADS_DIR
 
         # Kiểm tra nếu là URL user hay video đơn lẻ
         if '@' in url and not url.endswith('/video/'):
