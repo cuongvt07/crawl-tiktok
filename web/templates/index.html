@@ -444,7 +444,6 @@
       if (isLoading) return;
       const url = document.getElementById('downloadUrl').value.trim();
       const proxy = document.getElementById('downloadProxy').value.trim();
-      const customDir = document.getElementById('downloadCustomDir').value.trim();
       const limit = document.getElementById('downloadLimit').value.trim();
 
       if (!url) {
@@ -454,10 +453,6 @@
       try { new URL(url); } catch { showAlert('downloadResult', 'URL không hợp lệ', 'danger'); return; }
       if (proxy) {
         try { new URL(proxy); } catch { showAlert('downloadResult', 'Proxy không hợp lệ', 'danger'); return; }
-      }
-      if (customDir && customDir.includes('\\') && customDir.includes('/')) {
-        showAlert('downloadResult', 'Đường dẫn không hợp lệ', 'danger');
-        return;
       }
 
       isLoading = true;
@@ -469,7 +464,7 @@
       fetch('/api/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, proxy, customDir, limit })
+        body: JSON.stringify({ url, proxy, limit })
       })
       .then(res => res.json())
       .then(data => {
