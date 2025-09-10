@@ -1,6 +1,41 @@
-TiktokCrawler.egg-info/ 
-dist/ 
+# Python cache / compiled files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# IDE / Editor settings
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+coverage.xml
+.cache
+
+# Flask / Django specific
+instance/
+.webassets-cache
+
+# Backup / temp files
+*.new
+*.bak
+*.tmp
