@@ -116,7 +116,7 @@ def _get_ydl_opts(proxy: str = None, download: bool = True, output_dir: str = DO
         
     ydl_opts = {
         # Format chỉ định rõ ràng chỉ lấy MP4
-        'format': 'best[vcodec!*=av01][ext=mp4]/best[ext=mp4]/bestvideo[ext=mp4]+bestaudio[ext=m4a]/best',
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/bestvideo+bestaudio/best',
         'noplaylist': True,
         'writedescription': False,
         'writeinfojson': False,
