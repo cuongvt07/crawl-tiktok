@@ -107,7 +107,7 @@ def _ensure_ffmpeg():
         return None
     return ffmpeg_path
 
-def _get_ydl_opts(proxy: str = None, download: bool = True, output_dir: str = DOWNLOADS_DIR):
+def _get_ydl_opts(proxy: str = None, download: bool = True, output_dir: str = DOWNLOADS_DIR, max_filesize: str = "50M"):
     """Cấu hình yt-dlp để chỉ tải video MP4"""
     # Đảm bảo ffmpeg được cài đặt
     ffmpeg_path = _ensure_ffmpeg()
@@ -157,6 +157,8 @@ def _get_ydl_opts(proxy: str = None, download: bool = True, output_dir: str = DO
                 'add_metadata': True,
             }
         ],
+
+        'filesize_limit': max_filesize
     }
 
     if not download:
