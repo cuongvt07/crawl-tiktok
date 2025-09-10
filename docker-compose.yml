@@ -4,10 +4,10 @@ services:
   tiktokcrawler:
     build: .
     ports:
-      - "5000:5000"  # Đổi port thành 5000 cho web interface
+      - "5000:5000"  # Web interface chạy ở port 5000
     volumes:
       - ./downloads:/app/downloads
-      - ./user_downloads:/app/user_downloads  # Thêm volume cho user downloads
+      - ./user_downloads:/app/user_downloads  # Volume cho user downloads
     restart: unless-stopped
     env_file:
       - production.env
@@ -26,6 +26,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 5s
-      interval: 30s
-      timeout: 10s
-      retries: 3
