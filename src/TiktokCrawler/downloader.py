@@ -226,7 +226,19 @@ def download_video(url: str, proxy: str = None, output_dir: str = DOWNLOADS_DIR,
         os.makedirs(output_dir)
 
     try:
-        console.print(f"[blue]Đang tải video: {url}[/blue]")
+        # Kiểm tra và chuẩn hóa URL
+        if not url:
+            return False, "URL không được để trống"
+            
+        # Kiểm tra xem có phải là URL TikTok không
+        if not any(x in url.lower() for x in ['tiktok.com', 'douyin.com']):
+            return False, "URL không phải là URL TikTok hợp lệ"
+            
+        # Nếu URL chứa tham số query (sau dấu ?), loại bỏ chúng
+        clean_url = url.split('?')[0]
+        console.print(f"[blue]URL sau khi chuẩn hóa: {clean_url}[/blue]")
+        
+        console.print(f"[blue]Đang tải video: {clean_url}[/blue]")
         if proxy:
             console.print(f"[blue]Sử dụng proxy: {proxy}[/blue]")
 
@@ -234,15 +246,33 @@ def download_video(url: str, proxy: str = None, output_dir: str = DOWNLOADS_DIR,
         ydl_opts = _get_ydl_opts(proxy=proxy, download=True, output_dir=output_dir)
         if not ydl_opts:
             return False, "Chưa cài đặt ffmpeg. Vui lòng cài đặt ffmpeg theo hướng dẫn và thử lại."
+            
+        # Thêm cấu hình đặc biệt cho TikTok
+        ydl_opts.update({
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+            'force_generic_extractor': False
+        })
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             # Lấy thông tin video trước
-            info = ydl.extract_info(url, download=False)
+            info = ydl.extract_info(clean_url, download=False)
             if not info:
                 return False, "Không thể lấy thông tin video"
             
+            # Debug thông tin response
+            console.print("[yellow]Debug - Keys trong response:[/yellow]")
+            console.print(list(info.keys()))
+            
             video_title = info.get('title', 'Unknown')
-            console.print(f"[cyan]Đã tìm thấy video: {video_title}[/cyan]")
+            uploader = info.get('uploader', 'Unknown')
+            duration = info.get('duration', 0)
+            video_id = info.get('id', 'Unknown')
+            
+            console.print(f"[cyan]Thông tin video:[/cyan]")
+            console.print(f"[cyan]- ID: {video_id}[/cyan]")
+            console.print(f"[cyan]- Tiêu đề: {video_title}[/cyan]")
+            console.print(f"[cyan]- Tác giả: {uploader}[/cyan]")
+            console.print(f"[cyan]- Thời lượng: {duration}s[/cyan]")
             
             # Tải video
             ydl.download([url])
@@ -355,14 +385,31 @@ def download_user_videos(user_url: str, proxy: str = None, limit: int = None, ou
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             # Lấy thông tin user trước
             info = ydl.extract_info(user_url, download=False)
+            console.print(f"[yellow]Debug - Thông tin nhận được: {info.keys() if info else 'None'}[/yellow]")
+            
             if not info:
                 return False, "Không thể lấy thông tin user"
             
-            if 'entries' not in info or not info['entries']:
-                return False, "Không tìm thấy video nào từ user này"
+            # Xử lý các trường hợp khác nhau của cấu trúc dữ liệu
+            entries = []
+            if 'entries' in info:
+                entries = [e for e in info['entries'] if e is not None]
+            elif 'url' in info:
+                # Trường hợp chỉ có một video
+                entries = [info]
             
-            total_videos = len(info['entries'])
+            if not entries:
+                console.print("[red]Không tìm thấy video nào. Chi tiết response:[/red]")
+                console.print(info)
+                return False, "Không tìm thấy video nào từ user này. Vui lòng kiểm tra URL và thử lại."
+            
+            total_videos = len(entries)
             download_count = min(limit, total_videos) if limit else total_videos
+            
+            # Log thông tin chi tiết
+            console.print(f"[cyan]Thông tin user: {info.get('uploader', 'N/A')}[/cyan]")
+            console.print(f"[cyan]ID user: {info.get('uploader_id', 'N/A')}[/cyan]")
+            console.print(f"[cyan]URL: {info.get('webpage_url', 'N/A')}[/cyan]")
             
             console.print(f"[cyan]Tìm thấy {total_videos} video từ {info.get('uploader', 'N/A')}[/cyan]")
             console.print(f"[cyan]Sẽ tải {download_count} video...[/cyan]")
@@ -370,8 +417,18 @@ def download_user_videos(user_url: str, proxy: str = None, limit: int = None, ou
             # Đếm file MP4 trước khi tải
             initial_mp4_count = len([f for f in os.listdir(output_dir) if f.lower().endswith('.mp4')])
             
-            # Tải video
-            ydl.download([user_url])
+            # In thông tin từng video trước khi tải
+            console.print("\n[cyan]Danh sách video sẽ tải:[/cyan]")
+            for idx, entry in enumerate(entries[:download_count], 1):
+                console.print(f"[cyan]{idx}. {entry.get('title', 'Unknown')} - Duration: {entry.get('duration_string', 'N/A')}[/cyan]")
+            
+            try:
+                # Tải video
+                ydl.download([user_url])
+                console.print("[green]Hoàn tất quá trình tải xuống[/green]")
+            except Exception as e:
+                console.print(f"[red]Lỗi trong quá trình tải: {str(e)}[/red]")
+                return False, f"Lỗi trong quá trình tải: {str(e)}"
             
             # Kiểm tra và đảm bảo tất cả file là MP4
             _verify_mp4_files(output_dir)
