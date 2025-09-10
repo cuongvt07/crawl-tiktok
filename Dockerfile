@@ -18,6 +18,9 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir flask gunicorn
 
+# Update yt-dlp lên bản mới nhất để tránh lỗi FFmpegFixupStretchedVideoPP
+RUN pip install --no-cache-dir -U yt-dlp
+
 # Copy code
 COPY setup_web.py .
 COPY src/ ./src/
@@ -34,7 +37,7 @@ RUN mkdir -p /app/downloads /app/user_downloads \
 # Chuyển sang user non-root
 USER tiktokcrawler
 
-# Expose port 5000 (chạy cố định 5000 thôi, không cần 8080 nữa)
+# Expose port 5000
 EXPOSE 5000
 
 # Healthcheck
