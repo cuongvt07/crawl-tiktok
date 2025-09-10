@@ -1,0 +1,171 @@
+import os
+import time
+import shutil
+from pathlib import Path
+from flask import Flask, request, jsonify, send_from_directory, render_template
+from TiktokCrawler.downloader import download_video, get_video_info, download_user_videos
+
+app = Flask(__name__)
+
+# Disable caching completely
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Thư mục lưu video tải về
+DOWNLOADS_DIR = os.path.join(os.getcwd(), "downloads")
+if not os.path.exists(DOWNLOADS_DIR):
+    os.makedirs(DOWNLOADS_DIR)
+
+@app.after_request
+def after_request(response):
+    """Disable caching for all responses"""
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+    response.headers['Expires'] = '0'
+    response.headers['Pragma'] = 'no-cache'
+    # Add CORS headers
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
+
+@app.route('/')
+def index():
+    """Serve the main HTML page"""
+    return render_template('index.html')
+
+@app.route('/downloads/<path:filename>')
+def download_file(filename):
+    """Serve downloaded files"""
+    return send_from_directory(DOWNLOADS_DIR, filename, as_attachment=True)
+
+@app.route('/api/download', methods=['POST'])
+def api_download():
+    """API endpoint để tải video"""
+    data = request.get_json()
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'Dữ liệu không hợp lệ'
+        })
+
+    url = data.get('url', '').strip()
+    proxy = data.get('proxy', '').strip() or None
+    limit = data.get('limit')
+    
+    if not url:
+        return jsonify({
+            'success': False,
+            'message': 'URL không được để trống'
+        })
+
+    try:
+        # Convert limit to int if provided
+        if limit:
+            try:
+                limit = int(limit)
+                if limit < 1:
+                    return jsonify({
+                        'success': False,
+                        'message': 'Số lượng video phải lớn hơn 0'
+                    })
+            except ValueError:
+                return jsonify({
+                    'success': False,
+                    'message': 'Số lượng video không hợp lệ'
+                })
+
+        # Kiểm tra nếu là URL user hay video đơn lẻ
+        if '@' in url and not url.endswith('/video/'):
+            success, message = download_user_videos(url, proxy, limit)
+        else:
+            success, message = download_video(url, proxy)
+
+        if success:
+            return jsonify({
+                'success': True,
+                'message': message
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': message
+            })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Lỗi: {str(e)}'
+        })
+
+@app.route('/api/info', methods=['POST'])
+def api_info():
+    """API endpoint để lấy thông tin video"""
+    data = request.get_json()
+    if not data:
+        return jsonify({
+            'success': False,
+            'message': 'Dữ liệu không hợp lệ'
+        })
+
+    url = data.get('url', '').strip()
+    proxy = data.get('proxy', '').strip() or None
+    
+    if not url:
+        return jsonify({
+            'success': False,
+            'message': 'URL không được để trống'
+        })
+
+    try:
+        success, info = get_video_info(url, proxy)
+        return jsonify({
+            'success': success,
+            'info': info if success else None,
+            'message': None if success else info
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Lỗi: {str(e)}'
+        })
+
+@app.route('/api/download-to-local', methods=['POST'])
+def download_to_local():
+    """API để tải video từ server về máy local"""
+    try:
+        data = request.get_json()
+        filename = data.get('filename')
+        local_path = data.get('localPath', '').strip()
+
+        if not filename:
+            return jsonify({
+                'success': False,
+                'message': 'Tên file không được để trống'
+            })
+
+        file_path = os.path.join(DOWNLOADS_DIR, filename)
+        if not os.path.exists(file_path):
+            return jsonify({
+                'success': False,
+                'message': f'File {filename} không tồn tại trên server'
+            })
+
+        # Trả về đường dẫn download trực tiếp
+        download_url = request.host_url.rstrip('/') + f'/downloads/{filename}'
+        
+        return jsonify({
+            'success': True,
+            'message': 'File sẵn sàng để tải xuống',
+            'download_url': download_url,
+            'filename': filename,
+            'local_path': local_path
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': f'Lỗi: {str(e)}'
+        })
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, debug=True)

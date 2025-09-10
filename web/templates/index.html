@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Crawler - Web Interface</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TikTok Crawler - Web Interface</title>
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<style>
+        /* Base Styles */
         body {
             background-color: #f0f2f5;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -18,12 +21,19 @@
         }
         .navbar-brand {
             font-weight: bold;
+            color: #ff0050 !important;
         }
         .local-path-input {
             position: relative;
+            margin-bottom: 0.5rem;
         }
         .local-path-input .form-control {
             padding-right: 100px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .local-path-input .form-control:focus {
+            border-color: #ff0050;
+            box-shadow: 0 0 0 0.25rem rgba(255, 0, 80, 0.25);
         }
         .local-path-input .btn-browse {
             position: absolute;
@@ -31,12 +41,22 @@
             top: 0;
             border-top-left-radius: 0;
             border-bottom-left-radius: 0;
+            transition: all 0.15s ease-in-out;
+        }
+        .local-path-input .btn-browse:hover {
+            background-color: #ff0050;
+            color: white;
         }
         .progress {
             display: none;
             margin-top: 10px;
+            height: 20px;
+            background-color: #f8f9fa;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
         }
-            color: #ff0050 !important;
+        .progress-bar {
+            background-color: #ff0050;
+            transition: width 0.3s ease;
         }
         .card {
             border-radius: 10px;
@@ -49,6 +69,43 @@
             border-bottom: 1px solid #f0f0f0;
             font-weight: bold;
             border-radius: 10px 10px 0 0 !important;
+        }
+        /* Form Controls */
+        .local-path-input {
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+        .local-path-input .form-control {
+            padding-right: 100px;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .local-path-input .form-control:focus {
+            border-color: #ff0050;
+            box-shadow: 0 0 0 0.25rem rgba(255, 0, 80, 0.25);
+        }
+        .local-path-input .btn-browse {
+            position: absolute;
+            right: 0;
+            top: 0;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            transition: all 0.15s ease-in-out;
+        }
+        .local-path-input .btn-browse:hover {
+            background-color: #ff0050;
+            color: white;
+        }
+        /* Progress Bar */
+        .progress {
+            display: none;
+            margin-top: 10px;
+            height: 20px;
+            background-color: #f8f9fa;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .progress-bar {
+            background-color: #ff0050;
+            transition: width 0.3s ease;
         }
         .btn-primary {
             background-color: #ff0050;
@@ -112,521 +169,474 @@
         #videoPreviewContainer {
             display: none;
         }
-    </style>
+</style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="#"><i class="fab fa-tiktok me-2"></i>TikTok Crawler</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="ms-auto">
-                <button id="cleanupNonMP4Btn" class="btn btn-warning me-2">
-                    <i class="fas fa-broom me-1"></i>Xóa Các File Phụ
-                </button>
-                <button id="clearCacheBtn" class="btn btn-warning"><i class="fas fa-broom me-1"></i>Xóa Cache</button>
-            </div>
-        </div>
-    </nav>
-
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card">
-                    <div class="card-header">
-                        <ul class="nav nav-tabs card-header-tabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="download-tab" data-bs-toggle="tab" data-bs-target="#download" type="button" role="tab">Download Video</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Video Info</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="user-videos-tab" data-bs-toggle="tab" data-bs-target="#user-videos" type="button" role="tab">User Videos</button>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="downloads-tab" data-bs-toggle="tab" data-bs-target="#downloads" type="button" role="tab">Downloads</button>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="card-body">
-                        <div class="tab-content">
-                            <!-- Download Tab -->
-                            <div class="tab-pane fade show active" id="download" role="tabpanel">
-                                <h5 class="card-title mb-3">Download TikTok Video</h5>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    Chọn thư mục lưu trữ tùy chỉnh và giới hạn số lượng video tải xuống.
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="downloadUrl" placeholder="Enter TikTok video URL">
-                                    <label for="downloadUrl">TikTok Video URL</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="downloadProxy" placeholder="(Optional) Proxy URL">
-                                    <label for="downloadProxy">(Optional) Proxy (e.g., http://user:pass@host:port)</label>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="downloadCustomDir" class="form-label fw-bold text-primary">
-                                        Thư mục tải về tùy chỉnh
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="downloadCustomDir" placeholder="Chọn thư mục lưu" readonly>
-                                        <button class="btn btn-outline-primary" type="button" onclick="openFolderDialog('downloadCustomDir')">
-                                            <i class="fas fa-folder-open"></i> Chọn
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                <div class="mb-3">
-                                    <label for="downloadLimit" class="form-label fw-bold text-primary">
-                                        Số lượng video tối đa
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-list-ol"></i>
-                                        </span>
-                                        <input type="number" min="1" class="form-control" id="downloadLimit" 
-                                               placeholder="Nhập số lượng video muốn tải (để trống = tất cả)">
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <button id="downloadBtn" class="btn btn-primary">
-                                        <i class="fas fa-download me-2"></i>Download Video
-                                    </button>
-                                    <div id="downloadLoader" class="loader"></div>
-                                </div>
-                                <div id="downloadResult" class="mt-3"></div>
-                                <div id="videoPreviewContainer" class="mt-3">
-                                    <h5>Video Preview:</h5>
-                                    <div class="ratio ratio-16x9">
-                                        <video id="videoPreview" controls class="video-preview">
-                                            Your browser does not support the video tag.
-                                        </video>
-                                    </div>
-                                    <div class="d-grid gap-2 mt-3">
-                                        <a id="downloadLink" class="btn btn-success" href="#" download>
-                                            <i class="fas fa-download me-2"></i>Save Video
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Video Info Tab -->
-                            <div class="tab-pane fade" id="info" role="tabpanel">
-                                <h5 class="card-title mb-3">Get TikTok Video Information</h5>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="infoUrl" placeholder="Enter TikTok video URL">
-                                    <label for="infoUrl">TikTok Video URL</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="infoProxy" placeholder="(Optional) Proxy URL">
-                                    <label for="infoProxy">(Optional) Proxy (e.g., http://user:pass@host:port)</label>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <button id="infoBtn" class="btn btn-primary">
-                                        <i class="fas fa-info-circle me-2"></i>Get Information
-                                    </button>
-                                    <div id="infoLoader" class="loader"></div>
-                                </div>
-                                <div id="infoResult" class="mt-3"></div>
-                            </div>
-
-                            <!-- User Videos Tab -->
-                            <div class="tab-pane fade" id="user-videos" role="tabpanel">
-                                <h5 class="card-title mb-3">Download Videos from User</h5>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    Tải xuống video từ người dùng TikTok với các tùy chọn tùy chỉnh.
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="userUrl" placeholder="Enter TikTok user URL">
-                                    <label for="userUrl">TikTok User URL</label>
-                                </div>
-                                <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="userProxy" placeholder="(Optional) Proxy URL">
-                                    <label for="userProxy">(Optional) Proxy (e.g., http://user:pass@host:port)</label>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="userLimit" class="form-label fw-bold text-primary">
-                                        Số lượng video tối đa
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">
-                                            <i class="fas fa-list-ol"></i>
-                                        </span>
-                                        <input type="number" min="1" class="form-control" id="userLimit" 
-                                               placeholder="Nhập số lượng video muốn tải (để trống = tất cả)">
-                                    </div>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="userCustomDir" class="form-label fw-bold text-primary">
-                                        Thư mục tải về tùy chỉnh
-                                    </label>
-                                    <div class="input-group">
-                                        <input type="text" class="form-control" id="userCustomDir" placeholder="Chọn thư mục lưu" readonly>
-                                        <button class="btn btn-outline-primary" type="button" onclick="openFolderDialog('userCustomDir')">
-                                            <i class="fas fa-folder-open"></i> Chọn
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <button id="userVideosBtn" class="btn btn-primary">
-                                        <i class="fas fa-user me-2"></i>Download User Videos
-                                    </button>
-                                    <div id="userVideosLoader" class="loader"></div>
-                                </div>
-                                <div id="userVideosResult" class="mt-3"></div>
-                            </div>
-
-                            <!-- Downloads Tab -->
-                            <div class="tab-pane fade" id="downloads" role="tabpanel">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title mb-0">Manage Downloads</h5>
-                                    <div>
-                                        <button id="refreshDownloadsBtn" class="btn btn-outline-primary me-2">
-                                            <i class="fas fa-sync-alt"></i> Refresh
-                                        </button>
-                                        <button id="deleteAllBtn" class="btn btn-outline-danger">
-                                            <i class="fas fa-trash"></i> Delete All
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Filename</th>
-                                                <th>Size</th>
-                                                <th>Date</th>
-                                                <th>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="downloadsList">
-                                            <tr>
-                                                <td colspan="4" class="text-center">Loading downloads...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div id="downloadsMessage"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="#"><i class="fab fa-tiktok me-2"></i>TikTok Crawler</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="ms-auto">
+      <button id="cleanupNonMP4Btn" class="btn btn-warning me-2"><i class="fas fa-broom me-1"></i>Xóa Các File Phụ</button>
+      <button id="clearCacheBtn" class="btn btn-warning"><i class="fas fa-broom me-1"></i>Xóa Cache</button>
     </div>
+  </div>
+</nav>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let isLoading = false; // Ngăn chặn multiple requests
-            
-            // Load downloads on page load
-            loadDownloads();
-
-            // Download Button
-            document.getElementById('downloadBtn').addEventListener('click', function() {
-                if (isLoading) return;
-                
-                const url = document.getElementById('downloadUrl').value;
-                const proxy = document.getElementById('downloadProxy').value;
-                const customDir = document.getElementById('downloadCustomDir').value;
-                const limit = document.getElementById('downloadLimit').value;
-                
-                if (!url) {
-                    showAlert('downloadResult', 'Please enter a TikTok video URL', 'danger');
-                    return;
-                }
-                
-                isLoading = true;
-                document.getElementById('downloadLoader').style.display = 'block';
-                document.getElementById('downloadResult').innerHTML = '';
-                document.getElementById('videoPreviewContainer').style.display = 'none';
-                
-                fetch('/api/download', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, proxy, customDir, limit })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    isLoading = false;
-                    document.getElementById('downloadLoader').style.display = 'none';
-                    if (data.success) {
-                        showAlert('downloadResult', data.message, 'success');
-                        
-                        if (data.file_url) {
-                            document.getElementById('videoPreviewContainer').style.display = 'block';
-                            document.getElementById('videoPreview').src = data.file_url;
-                            
-                            const downloadLink = document.getElementById('downloadLink');
-                            downloadLink.href = data.file_url;
-                            downloadLink.setAttribute('download', data.filename);
-                            
-                            loadDownloads();
-                        } else if (data.localPath) {
-                            showAlert('downloadResult', `Video đã được tải về tại: ${data.localPath}`, 'success');
-                        }
-                    } else {
-                        showAlert('downloadResult', data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    isLoading = false;
-                    document.getElementById('downloadLoader').style.display = 'none';
-                    showAlert('downloadResult', 'Error: ' + error.message, 'danger');
-                });
-            });
-
-            // Info Button
-            document.getElementById('infoBtn').addEventListener('click', function() {
-                if (isLoading) return;
-                
-                const url = document.getElementById('infoUrl').value;
-                const proxy = document.getElementById('infoProxy').value;
-                
-                if (!url) {
-                    showAlert('infoResult', 'Please enter a TikTok video URL', 'danger');
-                    return;
-                }
-                
-                isLoading = true;
-                document.getElementById('infoLoader').style.display = 'block';
-                document.getElementById('infoResult').innerHTML = '';
-                
-                fetch('/api/info', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, proxy })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    isLoading = false;
-                    document.getElementById('infoLoader').style.display = 'none';
-                    if (data.success) {
-                        showAlert('infoResult', data.message, 'success');
-                    } else {
-                        showAlert('infoResult', data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    isLoading = false;
-                    document.getElementById('infoLoader').style.display = 'none';
-                    showAlert('infoResult', 'Error: ' + error.message, 'danger');
-                });
-            });
-
-            // User Videos Button
-            document.getElementById('userVideosBtn').addEventListener('click', function() {
-                if (isLoading) return;
-                
-                const url = document.getElementById('userUrl').value;
-                const proxy = document.getElementById('userProxy').value;
-                const limit = document.getElementById('userLimit').value;
-                const customDir = document.getElementById('userCustomDir').value;
-                
-                if (!url) {
-                    showAlert('userVideosResult', 'Please enter a TikTok user URL', 'danger');
-                    return;
-                }
-                
-                isLoading = true;
-                document.getElementById('userVideosLoader').style.display = 'block';
-                document.getElementById('userVideosResult').innerHTML = '';
-                
-                fetch('/api/user-videos', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, proxy, limit, customDir })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    isLoading = false;
-                    document.getElementById('userVideosLoader').style.display = 'none';
-                    if (data.success) {
-                        showAlert('userVideosResult', data.message, 'success');
-                        
-                        if (data.download_location && data.download_location !== 'downloads') {
-                            showAlert('userVideosResult', 
-                                `Video(s) đã được tải về tại: ${data.download_location}. 
-                                Số lượng video: ${data.files ? data.files.length : 0}`, 'info');
-                        }
-                        
-                        loadDownloads();
-                    } else {
-                        showAlert('userVideosResult', data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    isLoading = false;
-                    document.getElementById('userVideosLoader').style.display = 'none';
-                    showAlert('userVideosResult', 'Error: ' + error.message, 'danger');
-                });
-            });
-
-            // Refresh Downloads Button
-            document.getElementById('refreshDownloadsBtn').addEventListener('click', function() {
-                loadDownloads();
-            });
-
-            // Delete All Button
-            document.getElementById('deleteAllBtn').addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete all downloaded videos?')) {
-                    fetch('/api/delete-all', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showAlert('downloadsMessage', data.message, 'success');
-                            loadDownloads();
-                        } else {
-                            showAlert('downloadsMessage', data.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        showAlert('downloadsMessage', 'Error: ' + error.message, 'danger');
-                    });
-                }
-            });
-
-            // Clear Cache Button Handler
-            document.getElementById('clearCacheBtn').addEventListener('click', function() {
-                if (confirm('Bạn có muốn xóa cache và làm mới trang không?')) {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.reload(true);
-                }
-            });
-            
-            // Cleanup Non-MP4 Files Button Handler
-            document.getElementById('cleanupNonMP4Btn').addEventListener('click', function() {
-                if (confirm('Bạn có muốn xóa tất cả các tệp không phải MP4 không?')) {
-                    fetch('/api/cleanup-non-mp4', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alert(data.message);
-                            loadDownloads(); // Làm mới danh sách tải xuống
-                        } else {
-                            alert('Lỗi: ' + data.message);
-                        }
-                    })
-                    .catch(error => {
-                        alert('Error: ' + error.message);
-                    });
-                }
-            });
-            
-            // Tab switching
-            const triggerTabList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tab"]'));
-            triggerTabList.forEach(function (triggerEl) {
-                triggerEl.addEventListener('click', function (event) {
-                    event.preventDefault();
-                    if (this.getAttribute('data-bs-target') === '#downloads') {
-                        loadDownloads();
-                    }
-                });
-            });
-        });
-
-        function loadDownloads() {
-            fetch('/api/list-downloads')
-                .then(response => response.json())
-                .then(data => {
-                    const downloadsList = document.getElementById('downloadsList');
-                    
-                    if (data.files && data.files.length > 0) {
-                        let html = '';
-                        data.files.forEach(file => {
-                            html += `
-                                <tr>
-                                    <td>${file.name}</td>
-                                    <td>${file.size}</td>
-                                    <td>${file.date}</td>
-                                    <td>
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a href="${file.url}" class="btn btn-outline-primary" download>
-                                                <i class="fas fa-download"></i>
-                                            </a>
-                                            <a href="${file.url}" class="btn btn-outline-info" target="_blank">
-                                                <i class="fas fa-play"></i>
-                                            </a>
-                                            <button class="btn btn-outline-danger delete-file" data-filename="${file.name}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        });
-                        downloadsList.innerHTML = html;
-                        
-                        // Add event listeners to delete buttons
-                        document.querySelectorAll('.delete-file').forEach(button => {
-                            button.addEventListener('click', function() {
-                                const filename = this.getAttribute('data-filename');
-                                deleteFile(filename);
-                            });
-                        });
-                    } else {
-                        downloadsList.innerHTML = '<tr><td colspan="4" class="text-center">No downloaded videos found</td></tr>';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading downloads:', error);
-                    document.getElementById('downloadsList').innerHTML = 
-                        '<tr><td colspan="4" class="text-center">Error loading downloads</td></tr>';
-                });
-        }
-
-        function deleteFile(filename) {
-            if (confirm(`Are you sure you want to delete ${filename}?`)) {
-                fetch('/api/delete-file', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ filename })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showAlert('downloadsMessage', data.message, 'success');
-                        loadDownloads();
-                    } else {
-                        showAlert('downloadsMessage', data.message, 'danger');
-                    }
-                })
-                .catch(error => {
-                    showAlert('downloadsMessage', 'Error: ' + error.message, 'danger');
-                });
-            }
-        }
-
-        function showAlert(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="download-tab" data-bs-toggle="tab" data-bs-target="#download" type="button" role="tab">Download Video</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="info-tab" data-bs-toggle="tab" data-bs-target="#info" type="button" role="tab">Video Info</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="user-videos-tab" data-bs-toggle="tab" data-bs-target="#user-videos" type="button" role="tab">User Videos</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="downloads-tab" data-bs-toggle="tab" data-bs-target="#downloads" type="button" role="tab">Downloads</button>
+            </li>
+          </ul>
+        </div>
+        <div class="card-body">
+          <div class="tab-content">
+            <!-- Tab Download -->
+            <div class="tab-pane fade show active" id="download" role="tabpanel">
+              <h5 class="mb-3">Download TikTok Video</h5>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Chọn thư mục lưu trữ tùy chỉnh và giới hạn số lượng video tải xuống.
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="downloadUrl" placeholder="Enter TikTok video URL" />
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="downloadProxy" placeholder="(Optional) Proxy URL" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-primary">Thư mục tải về tùy chỉnh</label>
+                <div class="input-group local-path-input">
+                  <input type="text" class="form-control" id="downloadCustomDir" placeholder="Chọn thư mục lưu" readonly />
+                  <button class="btn btn-outline-primary btn-browse" type="button" onclick="openFolderDialog('downloadCustomDir')"><i class="fas fa-folder-open"></i></button>
                 </div>
-            `;
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-primary">Số lượng video tối đa</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-list-ol"></i></span>
+                  <input type="number" min="1" class="form-control" id="downloadLimit" placeholder="Nhập số lượng muốn tải (để trống = tất cả)" />
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <button id="downloadBtn" class="btn btn-primary"><i class="fas fa-download me-2"></i>Tải xuống</button>
+                <div id="downloadLoader" class="loader"></div>
+              </div>
+              <div id="downloadResult" class="mt-3"></div>
+              <div id="videoPreviewContainer" class="mt-4 d-none">
+                <div class="card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-play-circle me-2"></i>Xem trước Video</h5>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="closePreview()"><i class="fas fa-times"></i></button>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="ratio ratio-16x9">
+                      <video id="videoPreview" controls class="video-preview">Browser không hỗ trợ thẻ video.</video>
+                    </div>
+                  </div>
+                  <div class="card-footer">
+                    <a id="downloadLink" class="btn btn-success" href="#" download><i class="fas fa-download me-2"></i>Lưu Video</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Tab Video Info -->
+            <div class="tab-pane fade" id="info" role="tabpanel">
+              <h5 class="mb-3">Lấy Thông Tin Video TikTok</h5>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="infoUrl" placeholder="Enter TikTok video URL" />
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="infoProxy" placeholder="(Optional) Proxy URL" />
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <button id="infoBtn" class="btn btn-primary"><i class="fas fa-info-circle me-2"></i>Lấy Thông Tin</button>
+                <div id="infoLoader" class="loader"></div>
+              </div>
+              <div id="infoResult" class="mt-3"></div>
+            </div>
+            <!-- Tab User Videos -->
+            <div class="tab-pane fade" id="user-videos" role="tabpanel">
+              <h5 class="mb-3">Tải Video từ User</h5>
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Tải xuống video từ người dùng TikTok với các tùy chọn tùy chỉnh.
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="userUrl" placeholder="Enter TikTok user URL" />
+              </div>
+              <div class="mb-3">
+                <input type="text" class="form-control" id="userProxy" placeholder="(Optional) Proxy URL" />
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-primary">Số lượng tối đa</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-list-ol"></i></span>
+                  <input type="number" min="1" class="form-control" id="userLimit" placeholder="Số lượng video muốn tải (để trống = tất cả)" />
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label fw-bold text-primary">Thư mục tải về tùy chỉnh</label>
+                <div class="input-group local-path-input">
+                  <input type="text" class="form-control" id="userCustomDir" placeholder="Chọn thư mục lưu" readonly />
+                  <button class="btn btn-outline-primary btn-browse" type="button" onclick="openFolderDialog('userCustomDir')"><i class="fas fa-folder-open"></i></button>
+                </div>
+              </div>
+              <div class="d-flex align-items-center mb-3">
+                <button id="userVideosBtn" class="btn btn-primary"><i class="fas fa-user me-2"></i>Tải User Videos</button>
+                <div id="userVideosLoader" class="loader"></div>
+              </div>
+              <div id="userVideosResult" class="mt-3"></div>
+            </div>
+            <!-- Tab Downloads -->
+            <div class="tab-pane fade" id="downloads" role="tabpanel">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Quản lý Download</h5>
+                <a href="/download-zip" class="btn btn-success"><i class="fas fa-file-archive me-1"></i>Tải ZIP</a>
+                <div>
+                  <button id="refreshDownloadsBtn" class="btn btn-outline-primary me-2"><i class="fas fa-sync-alt"></i> Làm mới</button>
+                  <button id="deleteAllBtn" class="btn btn-outline-danger"><i class="fas fa-trash"></i> Xóa tất cả</button>
+                </div>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Tên file</th>
+                      <th>Kích thước</th>
+                      <th>Ngày</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="downloadsList">
+                    <tr><td colspan="4" class="text-center">Đang tải danh sách...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div id="downloadsMessage"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    let isLoading = false;
+
+    loadDownloads();
+
+    // Hàm hiển thị cảnh báo
+    function showAlert(elementId, message, type) {
+      document.getElementById(elementId).innerHTML = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>`;
+      if (type === 'success') {
+        setTimeout(() => {
+          const alertEl = document.querySelector(`#${elementId} .alert`);
+          if (alertEl) {
+            bootstrap.Alert.getOrCreateInstance(alertEl).close();
+          }
+        }, 5000);
+      }
+    }
+
+    // Hàm hiển thị tiến trình
+    function showProgress(show, progress=0) {
+      const progressElems = document.querySelectorAll('.progress');
+      progressElems.forEach(el => {
+        el.style.display = show ? 'flex' : 'none';
+        if (show) {
+          const bar = el.querySelector('.progress-bar');
+          bar.style.width = progress + '%';
+          bar.setAttribute('aria-valuenow', progress);
+          bar.textContent = progress + '%';
         }
-        
-        // Xử lý chọn thư mục - Fallback method
-        function openFolderDialog(inputId) {
-            // Thông báo cho người dùng cách thức hoạt động
-            const userInput = prompt("Nhập đường dẫn thư mục mong muốn (ví dụ: C:\\Downloads\\TikTok hoặc /Users/YourName/Downloads/TikTok):");
-            if (userInput && userInput.trim()) {
-                document.getElementById(inputId).value = userInput.trim();
-            }
+      });
+    }
+
+    // Mở hộp thoại chọn thư mục (đơn giản, user nhập tay)
+    window.openFolderDialog = function(inputId) {
+      const input = document.getElementById(inputId);
+      const path = prompt('Nhập đường dẫn thư mục (ví dụ: C:\\Downloads\\TikTok hoặc /Users/YourName/Downloads/TikTok):');
+      if (path && path.trim()) {
+        input.value = path.trim();
+      }
+    };
+
+    // Tải danh sách download
+    function loadDownloads() {
+      fetch('/api/list-downloads')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.getElementById('downloadsList');
+          if (data.files && data.files.length > 0) {
+            tbody.innerHTML = '';
+            data.files.forEach(f => {
+              tbody.innerHTML += `
+                <tr>
+                  <td>${f.name}</td>
+                  <td>${f.size}</td>
+                  <td>${f.date}</td>
+                  <td>
+                    <div class="btn-group btn-group-sm">
+                      <a href="${f.url}" class="btn btn-outline-primary" download><i class="fas fa-download"></i></a>
+                      <a href="${f.url}" class="btn btn-outline-info" target="_blank"><i class="fas fa-play"></i></a>
+                      <button class="btn btn-outline-danger delete-file" data-filename="${f.name}"><i class="fas fa-trash"></i></button>
+                    </div>
+                  </td>
+                </tr>`;
+            });
+            
+            document.querySelectorAll('.delete-file').forEach(btn => {
+              btn.addEventListener('click', () => {
+                deleteFile(btn.dataset.filename);
+              });
+            });
+          } else {
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center">Không có file</td></tr>';
+          }
+        });
+    }
+
+    function deleteFile(filename) {
+      if (confirm(`Bạn có chắc muốn xóa ${filename}?`)) {
+        fetch('/api/delete-file', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ filename })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+            loadDownloads();
+          } else {
+            alert('Lỗi: ' + data.message);
+          }
+        });
+      }
+    }
+
+    // Nút tải video
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (isLoading) return;
+      const url = document.getElementById('downloadUrl').value.trim();
+      const proxy = document.getElementById('downloadProxy').value.trim();
+      const customDir = document.getElementById('downloadCustomDir').value.trim();
+      const limit = document.getElementById('downloadLimit').value.trim();
+
+      if (!url) {
+        showAlert('downloadResult', 'Vui lòng nhập URL TikTok', 'danger');
+        return;
+      }
+      try { new URL(url); } catch { showAlert('downloadResult', 'URL không hợp lệ', 'danger'); return; }
+      if (proxy) {
+        try { new URL(proxy); } catch { showAlert('downloadResult', 'Proxy không hợp lệ', 'danger'); return; }
+      }
+      if (customDir && customDir.includes('\\') && customDir.includes('/')) {
+        showAlert('downloadResult', 'Đường dẫn không hợp lệ', 'danger');
+        return;
+      }
+
+      isLoading = true;
+      document.getElementById('downloadLoader').style.display = 'inline-block';
+      document.getElementById('downloadResult').innerHTML = '';
+      document.getElementById('videoPreviewContainer').classList.add('d-none');
+      showProgress(true, 0);
+
+      fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, proxy, customDir, limit })
+      })
+      .then(res => res.json())
+      .then(data => {
+        isLoading = false;
+        document.getElementById('downloadLoader').style.display = 'none';
+        if (data.success) {
+          showAlert('downloadResult', data.message, 'success');
+          if (data.file_url) {
+            document.getElementById('videoPreviewContainer').classList.remove('d-none');
+            document.getElementById('videoPreview').src = data.file_url;
+            const downloadLink = document.getElementById('downloadLink');
+            downloadLink.href = data.file_url;
+            downloadLink.setAttribute('download', data.filename);
+            loadDownloads();
+          } else if (data.localPath) {
+            showAlert('downloadResult', `Video đã tải tại: ${data.localPath}`, 'success');
+          }
+        } else {
+          showAlert('downloadResult', data.message, 'danger');
         }
-    </script>
+      })
+      .catch(err => {
+        isLoading = false;
+        document.getElementById('downloadLoader').style.display = 'none';
+        showAlert('downloadResult', 'Lỗi: ' + err.message, 'danger');
+      });
+    });
+
+    // Lấy thông tin video
+    document.getElementById('infoBtn').addEventListener('click', () => {
+      if (isLoading) return;
+      const url = document.getElementById('infoUrl').value.trim();
+      const proxy = document.getElementById('infoProxy').value.trim();
+
+      if (!url) {
+        showAlert('infoResult', 'Vui lòng nhập URL TikTok', 'danger');
+        return;
+      }
+
+      isLoading = true;
+      document.getElementById('infoLoader').style.display = 'inline-block';
+      document.getElementById('infoResult').innerHTML = '';
+
+      fetch('/api/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, proxy })
+      })
+      .then(res => res.json())
+      .then(data => {
+        isLoading = false;
+        document.getElementById('infoLoader').style.display = 'none';
+        if (data.success) {
+          showAlert('infoResult', data.message, 'success');
+        } else {
+          showAlert('infoResult', data.message, 'danger');
+        }
+      })
+      .catch(err => {
+        isLoading = false;
+        document.getElementById('infoLoader').style.display = 'none';
+        showAlert('infoResult', 'Lỗi: ' + err.message, 'danger');
+      });
+    });
+
+    // Tải video từ user
+    document.getElementById('userVideosBtn').addEventListener('click', () => {
+      if (isLoading) return;
+      const url = document.getElementById('userUrl').value.trim();
+      const proxy = document.getElementById('userProxy').value.trim();
+      const limit = document.getElementById('userLimit').value.trim();
+      const customDir = document.getElementById('userCustomDir').value.trim();
+
+      if (!url) {
+        showAlert('userVideosResult', 'Vui lòng nhập URL User', 'danger');
+        return;
+      }
+
+      isLoading = true;
+      document.getElementById('userVideosLoader').style.display = 'inline-block';
+      document.getElementById('userVideosResult').innerHTML = '';
+
+      fetch('/api/user-videos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, proxy, limit, customDir })
+      })
+      .then(res => res.json())
+      .then(data => {
+        isLoading = false;
+        document.getElementById('userVideosLoader').style.display = 'none';
+        if (data.success) {
+          showAlert('userVideosResult', data.message, 'success');
+          loadDownloads();
+        } else {
+          showAlert('userVideosResult', data.message, 'danger');
+        }
+      })
+      .catch(err => {
+        isLoading = false;
+        document.getElementById('userVideosLoader').style.display = 'none';
+        showAlert('userVideosResult', 'Lỗi: ' + err.message, 'danger');
+      });
+    });
+
+    // Nút làm mới danh sách download
+    document.getElementById('refreshDownloadsBtn').addEventListener('click', () => {
+      loadDownloads();
+    });
+
+    // Xóa tất cả
+    document.getElementById('deleteAllBtn').addEventListener('click', () => {
+      if (confirm('Bạn có chắc muốn xóa tất cả video đã tải?')) {
+        fetch('/api/delete-all', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('downloadsMessage', data.message, 'success');
+            loadDownloads();
+          } else {
+            showAlert('downloadsMessage', data.message, 'danger');
+          }
+        })
+        .catch(err => {
+          showAlert('downloadsMessage', 'Lỗi: ' + err.message, 'danger');
+        });
+      }
+    });
+
+    // Xóa cache
+    document.getElementById('clearCacheBtn').addEventListener('click', () => {
+      if (confirm('Bạn có muốn xóa cache và làm mới trang không?')) {
+        localStorage.clear();
+        sessionStorage.clear();
+        location.reload();
+      }
+    });
+
+    // Xóa file không phải MP4
+    document.getElementById('cleanupNonMP4Btn').addEventListener('click', () => {
+      if (confirm('Bạn có muốn xóa tất cả các tệp không phải MP4 không?')) {
+        fetch('/api/cleanup-non-mp4', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert(data.message);
+            loadDownloads();
+          } else {
+            alert('Lỗi: ' + data.message);
+          }
+        })
+        .catch(err => {
+          alert('Lỗi: ' + err.message);
+        });
+      }
+    });
+
+    // Hàm mở hộp chọn thư mục (đơn giản, user nhập tay)
+    function openFolderDialog(inputId) {
+      const input = document.getElementById(inputId);
+      const userInput = prompt('Nhập đường dẫn thư mục:\nVí dụ: C:\\Downloads\\TikTok hoặc /Users/YourName/Downloads/TikTok');
+      if (userInput && userInput.trim()) {
+        input.value = userInput.trim();
+      }
+    }
+
+  });
+</script>
 </body>
 </html>
