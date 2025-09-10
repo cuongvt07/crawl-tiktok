@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  tiktokcrawler:
+    build: .
+    ports:
+      - "5000:5000"  # Đổi port thành 5000 cho web interface
+    volumes:
+      - ./downloads:/app/downloads
+      - ./user_downloads:/app/user_downloads  # Thêm volume cho user downloads
+    restart: unless-stopped
+    env_file:
+      - production.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - TZ=Asia/Ho_Chi_Minh
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M  # Đảm bảo có ít nhất 512MB RAM
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+      interval: 30s
+      timeout: 10s
+      retries: 3
